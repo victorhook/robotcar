@@ -13,7 +13,7 @@ INT_SIZE = struct.calcsize('I')
 MD5SUM_LEN = 16
 
 
-class Flasher:
+class FlashHandler:
 
     TIMEOUT = .1
     BUFF_SIZE = 1024
@@ -69,16 +69,16 @@ class Flasher:
 
     def _start_flash(self):
         flashing = self._read_byte() == FlashProtocol.FLASH_NEW_FILE
-        print(flashing)
         while flashing:
             self._flash_one_file()
             flashing = self._read_byte() == FlashProtocol.FLASH_NEW_FILE
 
     def _read_byte(self):
-        return struct.unpack('B', self._con.read(1))[0]
+        return struct.unpack('B', self._con.recv(1))[0]
 
     def _send_byte(self, data):
-        self._con.write(struct.pack('B', data))
+        #self._con.write(struct.pack('B', data))
+        self._con.send(struct.pack('B', data))
 
     def _flash_one_file(self):
         con = self._con
@@ -86,12 +86,14 @@ class Flasher:
         # Read file-name-size and file-size
         file_name_len = con.recv(INT_SIZE)
         file_len = con.recv(INT_SIZE)
+
         # Convert to ints
         file_name_len = struct.unpack('I', file_name_len)[0]
         file_len = struct.unpack('I', file_len)[0]
+
         # Read file-name
         file_name = con.recv(file_name_len).decode('utf-8')
-        tmp_file_name = 'tmp' + file_name
+        tmp_file_name = file_name + '.tmp'
 
         # Read md5sum of file
         compsum = con.recv(MD5SUM_LEN)
@@ -130,13 +132,14 @@ class Flasher:
                 data = tmp_file.read(buff_size)
                 f.write(data)
 
+        tmp_file.close()
         os.remove(tmp_file_name)
         self._callback(FlashProtocol.FILE_OK)
 
 
-flasher = Flasher(ip, port)
-flasher.start(lambda msg: print(msg))
-while not flasher.is_connected():
-    flasher.poll()
+# flasher = FlashHandler(ip, port)
+# flasher.start(lambda msg: print(msg))
+# while not flasher.is_connected():
+#     flasher.poll()
 
-flasher.close()
+# flasher.close()

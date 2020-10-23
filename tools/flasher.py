@@ -18,7 +18,6 @@ class Flasher:
         self._port = port
         self._sock = None
         self._callback = None
-        self._filename = file_name
 
     def start(self, callback):
         self._callback = callback
@@ -65,6 +64,7 @@ class Flasher:
 
         result = self._read_byte()
         return result
+        return ''
 
     def list_files(self):
         self._send_byte(FlashProtocol.LIST_FILES_START)
@@ -88,17 +88,18 @@ class Flasher:
 
 
 
+if __name__ == '__main__':
 
-ip = '127.0.0.1'
-port = 1996
+    ip = '127.0.0.1'
+    port = 1996
 
-file_name = 'coolfile.txt'
+    file_name = 'coolfile.txt'
 
-flasher = Flasher(ip, port)
-flasher.start(lambda msg: print(msg))
-res = flasher.flash_multiple_files([file_name, 'tmpf'])
-#flasher.list_files()
-flasher.close()
+    flasher = Flasher(ip, port)
+    flasher.start(lambda msg: print(msg))
+    res = flasher.flash_multiple_files([file_name, 'tmpf'])
+    #flasher.list_files()
+    flasher.close()
 
 
 
